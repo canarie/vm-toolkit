@@ -138,7 +138,7 @@ print("\n***** Creating mount point %(mount_point)s *****" % locals())
 utils.execute("mkdir -p %(mount_point)s" % locals())
 mount_point_created = True
 
-if fs.f_bfree =< fs.f_blocks * 2 / 3:
+if fs.f_bfree <= fs.f_blocks * 2 / 3:
 	get_volume(disk_size_in_GBs * 2, instance, mount_point)
 
 if custom_kernel_path:
