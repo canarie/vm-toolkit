@@ -21,6 +21,7 @@ volume_created = False
 volume_mounted = False
 volume = None
 
+
 @atexit.register
 def cleanup():
 	print("\n***** Cleaning up *****")
@@ -31,17 +32,18 @@ def cleanup():
 	if mount_point_created:
 		utils.execute("rm -rf " + mount_point)
 
+
 def check_for_collisions(image_name, kernel_name, ramdisk_name):
 	images = vmcreate.conn.get_all_images()
 
 	for image in images:
 		overwrite = ''
 
-		if image.location == bucket_name + '/' + image_name:
+		if image.location == bucket_name + '/' + image_name + '.manifest.xml':
 			overwrite = raw_input("\nImage already exists, overwrite? (y/N) ")
-		elif image.location == bucket_name + '/' + kernel_name:
+		elif image.location == bucket_name + '/' + kernel_name + '.manifest.xml':
 			overwrite = raw_input("Kernel already exists, overwrite? (y/N) ")
-		elif image.location == bucket_name + '/' + ramdisk_name:
+		elif image.location == bucket_name + '/' + ramdisk_name + '.manifest.xml':
 			overwrite = raw_input("Ramdisk already exists, overwrite? (y/N) ")
 		else:
 			continue
@@ -50,6 +52,7 @@ def check_for_collisions(image_name, kernel_name, ramdisk_name):
 			image.deregister()
 		else:
 			exit(0)
+
 
 def get_volume(size_in_GBs, instance, mount_point):
 	global volume_created
@@ -79,7 +82,6 @@ def get_volume(size_in_GBs, instance, mount_point):
 	volume_mounted = True
 
 
-
 if not vminit.isRoot():
 	print("You need to run this script as root to bundle a VM.")
 	exit(1)
@@ -99,7 +101,6 @@ if custom_kernel_path:
 	default_kernel_name = custom_kernel_path.split('/')[-1]
 	custom_kernel_name = raw_input("\nKernel name (%(default_kernel_name)s): " % locals()).strip()
 	kernel_name = custom_kernel_name or default_kernel_name
-	kernel_name += '.manifest.xml'
 
 ramdisk_name = ''
 custom_ramdisk_path = raw_input("\nRamdisk path (leave blank unless you have a custom ramdisk): ").strip()
@@ -110,9 +111,8 @@ if custom_ramdisk_path:
 	default_ramdisk_name = custom_ramdisk_path.split('/')[-1]
 	custom_ramdisk_name = raw_input("\nRamdisk name (%(default_ramdisk_name)s): " % locals()).strip()
 	ramdisk_name = custom_ramdisk_name or default_ramdisk_name
-	ramdisk_name += '.manifest.xml'
 
-check_for_collisions(image_name + '.manifest.xml', kernel_name, ramdisk_name)
+check_for_collisions(image_name, kernel_name, ramdisk_name)
 
 fs = os.statvfs('/')
 disk_size_in_GBs = int(round((fs.f_blocks * fs.f_frsize) / GBs))
@@ -145,6 +145,8 @@ if custom_kernel_path:
 	print("\n***** Bundling kernel *****")
 	utils.execute("euca-bundle-image -i %(custom_kernel_path)s -d %(mount_point)s --kernel true -p %(kernel_name)s" % locals())
 
+	kernel_name += '.manifest.xml'
+
 	print("\n***** Uploading kernel *****")
 	utils.execute("euca-upload-bundle -b %(bucket_name)s -m %(mount_point)s/%(kernel_name)s" % locals())
 
@@ -154,6 +156,8 @@ if custom_kernel_path:
 if custom_ramdisk_path:
 	print("\n***** Bundling ramdisk *****")
 	utils.execute("euca-bundle-image -i %(custom_ramdisk_path)s -d %(mount_point)s --ramdisk true -p %(ramdisk_name)s" % locals())
+
+	ramdisk_name += '.manifest.xml'
 
 	print("\n***** Uploading ramdisk *****")
 	utils.execute("euca-upload-bundle -b %(bucket_name)s -m %(mount_point)s/%(ramdisk_name)s" % locals())
@@ -171,8 +175,10 @@ kernel_opt = '' if kernel_id == '' else '--kernel ' + kernel_id
 ramdisk_opt = '' if ramdisk_id == '' else '--ramdisk ' + ramdisk_id
 utils.execute("euca-bundle-vol --no-inherit %(kernel_opt)s %(ramdisk_opt)s -d %(mount_point)s -r x86_64 -p %(image_name)s -s %(disk_size_in_MBs)s -e %(dirs_to_exclude)s" % locals())
 
+image_name += '.manifest.xml'
+
 print("\n***** Uploading filesystem *****")
-utils.execute("euca-upload-bundle -b %(bucket_name)s -m %(mount_point)s/%(image_name)s.manifest.xml" % locals())
+utils.execute("euca-upload-bundle -b %(bucket_name)s -m %(mount_point)s/%(image_name)s" % locals())
 
 print("\n***** Registering filesystem *****")
-utils.execute("euca-register %(bucket_name)s/%(image_name)s.manifest.xml" % locals())
+utils.execute("euca-register %(bucket_name)s/%(image_name)s" % locals())
