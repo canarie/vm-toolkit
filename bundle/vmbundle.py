@@ -142,26 +142,20 @@ if fs.f_bfree <= fs.f_blocks * 2 / 3:
 	get_volume(disk_size_in_GBs * 2, instance, mount_point)
 
 if custom_kernel_path:
-	kernel_bundle_path = mount_point + '/' + custom_kernel_path.split('/')[-1] + '.manifest.xml'
-
 	print("\n***** Bundling kernel *****")
-	utils.execute("euca-bundle-image -i %(custom_kernel_path)s -d %(mount_point)s --kernel true" % locals())
+	utils.execute("euca-bundle-image -i %(custom_kernel_path)s -d %(mount_point)s --kernel true -p %(kernel_name)s" % locals())
 
 	print("\n***** Uploading kernel *****")
-	utils.execute("mv %(kernel_bundle_path)s %(mount_point)s/%(kernel_name)s" % locals())
 	utils.execute("euca-upload-bundle -b %(bucket_name)s -m %(mount_point)s/%(kernel_name)s" % locals())
 
 	print("\n***** Registering kernel *****")
 	kernel_id = utils.execute("euca-register %(bucket_name)s/%(kernel_name)s" % locals())[0].split()[1]
 
 if custom_ramdisk_path:
-	ramdisk_bundle_path = mount_point + '/' + custom_ramdisk_path.split('/')[-1] + '.manifest.xml'
-
 	print("\n***** Bundling ramdisk *****")
-	utils.execute("euca-bundle-image -i %(custom_ramdisk_path)s -d %(mount_point)s --ramdisk true" % locals())
+	utils.execute("euca-bundle-image -i %(custom_ramdisk_path)s -d %(mount_point)s --ramdisk true -p %(ramdisk_name)s" % locals())
 
 	print("\n***** Uploading ramdisk *****")
-	utils.execute("mv %(ramdisk_bundle_path)s %(mount_point)s/%(ramdisk_name)s" % locals())
 	utils.execute("euca-upload-bundle -b %(bucket_name)s -m %(mount_point)s/%(ramdisk_name)s" % locals())
 
 	print("\n***** Registering ramdisk *****")
