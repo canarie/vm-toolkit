@@ -96,7 +96,7 @@ if custom_kernel_path and not os.path.exists(custom_kernel_path):
 	print("%(custom_kernel_path)s does not exist" % locals())
 	exit(1)
 if custom_kernel_path:
-	default_kernel_name = image_name + '-' + custom_kernel_path.split('/')[-1]
+	default_kernel_name = custom_kernel_path.split('/')[-1]
 	custom_kernel_name = raw_input("\nKernel name (%(default_kernel_name)s): " % locals()).strip()
 	kernel_name = custom_kernel_name or default_kernel_name
 	kernel_name += '.manifest.xml'
@@ -107,7 +107,7 @@ if custom_ramdisk_path and not os.path.exists(custom_ramdisk_path):
 	print("%(custom_ramdisk_path)s does not exist" % locals())
 	exit(1)
 if custom_ramdisk_path:
-	default_ramdisk_name = image_name + '-' + custom_ramdisk_path.split('/')[-1]
+	default_ramdisk_name = custom_ramdisk_path.split('/')[-1]
 	custom_ramdisk_name = raw_input("\nRamdisk name (%(default_ramdisk_name)s): " % locals()).strip()
 	ramdisk_name = custom_ramdisk_name or default_ramdisk_name
 	ramdisk_name += '.manifest.xml'
