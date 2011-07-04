@@ -138,8 +138,8 @@ print("\n***** Creating mount point %(mount_point)s *****" % locals())
 utils.execute("mkdir -p %(mount_point)s" % locals())
 mount_point_created = True
 
-if fs.f_bfree < fs.f_blocks / 2:
-	get_volume(disk_size_in_GBs, instance, mount_point)
+if fs.f_bfree =< fs.f_blocks * 2 / 3:
+	get_volume(disk_size_in_GBs * 2, instance, mount_point)
 
 if custom_kernel_path:
 	kernel_bundle_path = mount_point + '/' + custom_kernel_path.split('/')[-1] + '.manifest.xml'
