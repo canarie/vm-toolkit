@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import division
+from sys import argv
 import os
 import os.path
 import boto
@@ -86,6 +87,11 @@ if not vminit.isRoot():
 	print("You need to run this script as root to bundle a VM.")
 	exit(1)
 
+if len(argv) > 1 and argv[1] == '--nocloud':
+	cloud = False
+else:
+	cloud = True
+
 custom_bucket_name = raw_input("Bucket name (%(DEFAULT_BUCKET_NAME)s): " % locals()).strip()
 bucket_name = custom_bucket_name or DEFAULT_BUCKET_NAME
 
@@ -118,14 +124,18 @@ fs = os.statvfs('/')
 disk_size_in_GBs = int(round((fs.f_blocks * fs.f_frsize) / GBs))
 disk_size_in_MBs = int(round((fs.f_blocks * fs.f_frsize) / MBs))
 
-print("\n***** Getting metadata *****")
-metadata = boto.utils.get_instance_metadata()
-instance_id = metadata['instance-id']
-instance = vmcreate.get_instance(instance_id)
-kernel_id = metadata['kernel-id']
-try:
-	ramdisk_id = metadata['ramdisk-id']
-except KeyError:
+if cloud:
+	print("\n***** Getting metadata *****")
+	metadata = boto.utils.get_instance_metadata()
+	instance_id = metadata['instance-id']
+	instance = vmcreate.get_instance(instance_id)
+	kernel_id = metadata['kernel-id']
+	try:
+		ramdisk_id = metadata['ramdisk-id']
+	except KeyError:
+		ramdisk_id = ''
+else:
+	kernel_id = ''
 	ramdisk_id = ''
 
 mount_point = MOUNT_POINT_PREFIX
@@ -139,7 +149,11 @@ utils.execute("mkdir -p %(mount_point)s" % locals())
 mount_point_created = True
 
 if fs.f_bfree <= fs.f_blocks * 2 / 3:
-	get_volume(disk_size_in_GBs * 2, instance, mount_point)
+	if cloud:
+		get_volume(disk_size_in_GBs * 2, instance, mount_point)
+	else:
+		print("Not enough space to bundle")
+		exit(1)
 
 if custom_kernel_path:
 	print("\n***** Bundling kernel *****")
