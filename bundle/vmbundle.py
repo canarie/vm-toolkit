@@ -167,7 +167,8 @@ if custom_ramdisk_path:
 
 try:
 	utils.execute("rm -f /usr/NX/home/nx/.ssh/known_hosts")
-	utils.exexute("echo '' > /usr/NX/home/nx/.ssh/default.id_dsa.pub")
+	utils.execute("echo '' > /usr/NX/home/nx/.ssh/default.id_dsa.pub")
+	utils.execute("echo '' > /usr/NX/home/nx/.ssh/authorized_keys2")
 except:
 	None
 
