@@ -99,20 +99,24 @@ custom_image_name = raw_input("\nImage name (%(DEFAULT_IMAGE_NAME)s): " % locals
 image_name = custom_image_name or DEFAULT_IMAGE_NAME
 
 kernel_name = ''
-custom_kernel_path = raw_input("\nKernel path (leave blank unless you have a custom kernel): ").strip()
-if custom_kernel_path and not os.path.exists(custom_kernel_path):
-	print("%(custom_kernel_path)s does not exist" % locals())
-	exit(1)
+while True:
+	custom_kernel_path = raw_input("\nKernel path (leave blank unless you have a custom kernel): ").strip()
+	if custom_kernel_path and not os.path.exists(custom_kernel_path):
+		print("%(custom_kernel_path)s does not exist" % locals())
+	else:
+		break
 if custom_kernel_path:
 	default_kernel_name = custom_kernel_path.split('/')[-1]
 	custom_kernel_name = raw_input("\nKernel name (%(default_kernel_name)s): " % locals()).strip()
 	kernel_name = custom_kernel_name or default_kernel_name
 
 ramdisk_name = ''
-custom_ramdisk_path = raw_input("\nRamdisk path (leave blank unless you have a custom ramdisk): ").strip()
-if custom_ramdisk_path and not os.path.exists(custom_ramdisk_path):
-	print("%(custom_ramdisk_path)s does not exist" % locals())
-	exit(1)
+while True:
+	custom_ramdisk_path = raw_input("\nRamdisk path (leave blank unless you have a custom ramdisk): ").strip()
+	if custom_ramdisk_path and not os.path.exists(custom_ramdisk_path):
+		print("%(custom_ramdisk_path)s does not exist" % locals())
+	else:
+		break
 if custom_ramdisk_path:
 	default_ramdisk_name = custom_ramdisk_path.split('/')[-1]
 	custom_ramdisk_name = raw_input("\nRamdisk name (%(default_ramdisk_name)s): " % locals()).strip()
