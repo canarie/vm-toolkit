@@ -30,7 +30,6 @@ volume_created = False
 volume_mounted = False
 volume = None
 
-
 @atexit.register
 def cleanup():
 	print("\n***** Cleaning up *****")
@@ -40,7 +39,6 @@ def cleanup():
 		vmcreate.detach_and_delete_volume(volume)
 	if mount_point_created:
 		utils.execute("rm -rf " + mount_point)
-
 
 def check_for_collisions(image_name, kernel_name, ramdisk_name):
 	images = vmcreate.conn.get_all_images()
@@ -61,7 +59,6 @@ def check_for_collisions(image_name, kernel_name, ramdisk_name):
 			image.deregister()
 		else:
 			exit(0)
-
 
 def get_volume(size_in_GBs, instance, mount_point):
 	global volume_created
@@ -113,6 +110,7 @@ while True:
 		print("%(custom_kernel_path)s does not exist" % locals())
 	else:
 		break
+
 if custom_kernel_path:
 	default_kernel_name = custom_kernel_path.split('/')[-1]
 	custom_kernel_name = raw_input("\nKernel name (%(default_kernel_name)s): " % locals()).strip()
@@ -125,10 +123,17 @@ while True:
 		print("%(custom_ramdisk_path)s does not exist" % locals())
 	else:
 		break
+
 if custom_ramdisk_path:
 	default_ramdisk_name = custom_ramdisk_path.split('/')[-1]
 	custom_ramdisk_name = raw_input("\nRamdisk name (%(default_ramdisk_name)s): " % locals()).strip()
 	ramdisk_name = custom_ramdisk_name or default_ramdisk_name
+
+make_private = raw_input("\nMake this image private so only members of your current project can see it? (Y/n): ").strip()
+if make_private == 'n' or make_private == 'N':
+	private = False
+else:
+	private = True
 
 check_for_collisions(image_name, kernel_name, ramdisk_name)
 
@@ -179,6 +184,9 @@ if custom_kernel_path:
 	print("\n***** Registering kernel *****")
 	kernel_id = utils.execute("euca-register %(bucket_name)s/%(kernel_name)s" % locals())[0].split()[1]
 
+	if private:
+		utils.execute("euca-modify-image-attribute -l -r all %(kernel_id)" % locals())
+
 if custom_ramdisk_path:
 	print("\n***** Bundling ramdisk *****")
 	utils.execute("euca-bundle-image -i %(custom_ramdisk_path)s -d %(mount_point)s --ramdisk true -p %(ramdisk_name)s" % locals())
@@ -190,6 +198,9 @@ if custom_ramdisk_path:
 
 	print("\n***** Registering ramdisk *****")
 	ramdisk_id = utils.execute("euca-register %(bucket_name)s/%(ramdisk_name)s" % locals())[0].split()[1]
+
+	if private:
+		utils.execute("euca-modify-image-attribute -l -r all %(ramdisk_id)" % locals())
 
 try:
 	utils.execute("rm -f /usr/NX/home/nx/.ssh/known_hosts")
@@ -214,4 +225,7 @@ print("\n***** Uploading filesystem *****")
 utils.execute("euca-upload-bundle -b %(bucket_name)s -m %(mount_point)s/%(image_name)s" % locals())
 
 print("\n***** Registering filesystem *****")
-utils.execute("euca-register %(bucket_name)s/%(image_name)s" % locals())
+filesystem_id = utils.execute("euca-register %(bucket_name)s/%(image_name)s" % locals())[0].split()[1]
+
+if private:
+	utils.execute("euca-modify-image-attribute -l -r all %(filesystem_id)" % locals())
