@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 
+"""
+Bundles, uploads and registers an image of the currently running OS.  Intended
+to be used with VMs already running in the cloud, but can bundle from other 
+sources using the --nocloud option.  Bundling from outside the cloud is not 
+guaranteed to work and depends on proper configuration of the OS before 
+bundling.
+"""
+
 from __future__ import division
 from sys import argv
 import os
@@ -13,7 +21,7 @@ import atexit
 GBs = 1024 * 1024 * 1024
 MBs = 1024 * 1024
 MOUNT_POINT_PREFIX = "/mnt/vmbundle"
-DEFAULT_IMAGE_NAME = "new-image"
+DEFAULT_IMAGE_NAME = "filesystem"
 DEFAULT_BUCKET_NAME = "my-bucket"
 
 mount_point_created = False
