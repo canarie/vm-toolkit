@@ -129,11 +129,12 @@ if custom_ramdisk_path:
 	custom_ramdisk_name = raw_input("\nRamdisk name (%(default_ramdisk_name)s): " % locals()).strip()
 	ramdisk_name = custom_ramdisk_name or default_ramdisk_name
 
-make_private = raw_input("\nMake this image private so only members of your current project can see it? (Y/n): ").strip()
-if make_private == 'n' or make_private == 'N':
-	private = False
-else:
-	private = True
+#make_private = raw_input("\nMake this image private so only members of your current project can see it? (Y/n): ").strip()
+#if make_private == 'n' or make_private == 'N':
+#	private = False
+#else:
+#	private = True
+private = False
 
 check_for_collisions(image_name, kernel_name, ramdisk_name)
 
