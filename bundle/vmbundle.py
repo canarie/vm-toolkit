@@ -185,7 +185,7 @@ if custom_kernel_path:
 	kernel_id = utils.execute("euca-register %(bucket_name)s/%(kernel_name)s" % locals())[0].split()[1]
 
 	if private:
-		utils.execute("euca-modify-image-attribute -l -r all %(kernel_id)" % locals())
+		utils.execute("euca-modify-image-attribute -l -r all %(kernel_id)s" % locals())
 
 if custom_ramdisk_path:
 	print("\n***** Bundling ramdisk *****")
@@ -200,7 +200,7 @@ if custom_ramdisk_path:
 	ramdisk_id = utils.execute("euca-register %(bucket_name)s/%(ramdisk_name)s" % locals())[0].split()[1]
 
 	if private:
-		utils.execute("euca-modify-image-attribute -l -r all %(ramdisk_id)" % locals())
+		utils.execute("euca-modify-image-attribute -l -r all %(ramdisk_id)s" % locals())
 
 try:
 	utils.execute("rm -f /usr/NX/home/nx/.ssh/known_hosts")
@@ -228,4 +228,4 @@ print("\n***** Registering filesystem *****")
 filesystem_id = utils.execute("euca-register %(bucket_name)s/%(image_name)s" % locals())[0].split()[1]
 
 if private:
-	utils.execute("euca-modify-image-attribute -l -r all %(filesystem_id)" % locals())
+	utils.execute("euca-modify-image-attribute -l -r all %(filesystem_id)s" % locals())
