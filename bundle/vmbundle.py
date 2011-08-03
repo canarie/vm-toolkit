@@ -210,7 +210,7 @@ try:
 except:
 	None
 
-dirs_to_exclude = "/mnt,/tmp,/root/.ssh,/ubuntu/.ssh,/etc/udev/rules.d,/var/lib/dhclient,/var/lib/dhcp3" % locals()
+dirs_to_exclude = "/mnt,/tmp,/root/.ssh,/home/ubuntu/.ssh,/etc/udev/rules.d,/var/lib/dhclient,/var/lib/dhcp3" % locals()
 print("\n***** Excluding directories %(dirs_to_exclude)s *****" % locals())
 
 utils.execute("sed -i 's/\S\+\s\+\/\s\+/\/dev\/vda \/ /' /etc/fstab")
