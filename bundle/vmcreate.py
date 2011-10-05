@@ -24,11 +24,12 @@ if not (EC2_ACCESS_KEY and EC2_SECRET_KEY and EC2_URL):
 ec2_url_parsed = urlparse(EC2_URL)
 # TODO: need to deal with region in entire file
 # curl http://169.254.169.254/2009-04-04/meta-data/placement/availability-zone
-novaRegion=boto.ec2.regioninfo.RegionInfo(name = "nova", endpoint = ec2_url_parsed.hostname)
+novaRegion = boto.ec2.regioninfo.RegionInfo(name = "nova", endpoint = ec2_url_parsed.hostname)
+is_secure = True if ec2_url_parsed.scheme == 'https' else False
 
 conn = boto.connect_ec2(aws_access_key_id=EC2_ACCESS_KEY,
 						aws_secret_access_key=EC2_SECRET_KEY,
-						is_secure=False,
+						is_secure=is_secure,
 						region=novaRegion,
 						port=ec2_url_parsed.port,
 						path=ec2_url_parsed.path) 
