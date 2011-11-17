@@ -147,7 +147,10 @@ if cloud:
 	metadata = boto.utils.get_instance_metadata()
 	instance_id = metadata['instance-id']
 	instance = vmcreate.get_instance(instance_id)
-	kernel_id = metadata['kernel-id']
+	try:
+		kernel_id = metadata['kernel-id']
+	except KeyError:
+		kernel_id = ''
 	try:
 		ramdisk_id = metadata['ramdisk-id']
 	except KeyError:
@@ -208,7 +211,7 @@ try:
 	utils.execute("echo '' > /usr/NX/home/nx/.ssh/default.id_dsa.pub")
 	utils.execute("echo '' > /usr/NX/home/nx/.ssh/authorized_keys2")
 except:
-	None
+	pass
 
 dirs_to_exclude = "/mnt,/tmp,/root/.ssh,/home/ubuntu/.ssh,/etc/udev/rules.d,/var/lib/dhclient,/var/lib/dhcp3" % locals()
 print("\n***** Excluding directories %(dirs_to_exclude)s *****" % locals())
