@@ -17,6 +17,7 @@ import utils
 import vmcreate
 import vminit
 import atexit
+import time
 
 GBs = 1024 * 1024 * 1024
 MBs = 1024 * 1024
@@ -39,26 +40,6 @@ def cleanup():
 		vmcreate.detach_and_delete_volume(volume)
 	if mount_point_created:
 		utils.execute("rm -rf " + mount_point)
-
-def check_for_collisions(image_name, kernel_name, ramdisk_name):
-	images = vmcreate.conn.get_all_images()
-
-	for image in images:
-		overwrite = ''
-
-		if image.location == bucket_name + '/' + image_name + '.manifest.xml':
-			overwrite = raw_input("\nImage already exists, overwrite? (y/N) ")
-		elif image.location == bucket_name + '/' + kernel_name + '.manifest.xml':
-			overwrite = raw_input("Kernel already exists, overwrite? (y/N) ")
-		elif image.location == bucket_name + '/' + ramdisk_name + '.manifest.xml':
-			overwrite = raw_input("Ramdisk already exists, overwrite? (y/N) ")
-		else:
-			continue
-	
-		if overwrite == 'y' or overwrite == 'Y':
-			image.deregister()
-		else:
-			exit(0)
 
 def get_volume(size_in_GBs, instance, mount_point):
 	global volume_created
@@ -87,6 +68,22 @@ def get_volume(size_in_GBs, instance, mount_point):
 	utils.execute("mount %(device)s %(mount_point)s" % locals())
 	volume_mounted = True
 
+def make_private(image_id):
+	sleep_time = 10
+	total_time = 0
+	image = vmcreate.conn.get_image(image_id)
+	print("\n***** Waiting for image to become available to make private *****")
+
+	while image.state != 'available':
+		time.sleep(sleep_time)
+		total_time += sleep_time
+		image = vmcreate.conn.get_image(image_id)
+		if total_time > 900:
+			print("Timed out while waiting for image to become available, use 'euca-modify-image-attributes -l -r all %(image_id)s' to make the image private manually" % locals())
+			return
+
+
+	utils.execute("euca-modify-image-attribute -l -r all %(image_id)s" % locals())
 
 if not vminit.isRoot():
 	print("You need to run this script as root to bundle a VM.")
@@ -129,14 +126,11 @@ if custom_ramdisk_path:
 	custom_ramdisk_name = raw_input("\nRamdisk name (%(default_ramdisk_name)s): " % locals()).strip()
 	ramdisk_name = custom_ramdisk_name or default_ramdisk_name
 
-#make_private = raw_input("\nMake this image private so only members of your current project can see it? (Y/n): ").strip()
-#if make_private == 'n' or make_private == 'N':
-#	private = False
-#else:
-#	private = True
-private = False
-
-check_for_collisions(image_name, kernel_name, ramdisk_name)
+is_private = raw_input("\nMake image(s) private so they're only visible to your project? (Y/n): ").strip()
+if is_private == 'n' or is_private == 'N':
+	private = False
+else:
+	private = True
 
 fs = os.statvfs('/')
 disk_size_in_GBs = int(round((fs.f_blocks * fs.f_frsize) / GBs))
@@ -189,7 +183,7 @@ if custom_kernel_path:
 	kernel_id = utils.execute("euca-register %(bucket_name)s/%(kernel_name)s" % locals())[0].split()[1]
 
 	if private:
-		utils.execute("euca-modify-image-attribute -l -r all %(kernel_id)s" % locals())
+		make_private(kernel_id)
 
 if custom_ramdisk_path:
 	print("\n***** Bundling ramdisk *****")
@@ -204,7 +198,7 @@ if custom_ramdisk_path:
 	ramdisk_id = utils.execute("euca-register %(bucket_name)s/%(ramdisk_name)s" % locals())[0].split()[1]
 
 	if private:
-		utils.execute("euca-modify-image-attribute -l -r all %(ramdisk_id)s" % locals())
+		make_private(ramdisk_id)
 
 try:
 	utils.execute("rm -f /usr/NX/home/nx/.ssh/known_hosts")
@@ -229,7 +223,7 @@ print("\n***** Uploading filesystem *****")
 utils.execute("euca-upload-bundle -b %(bucket_name)s -m %(mount_point)s/%(image_name)s" % locals())
 
 print("\n***** Registering filesystem *****")
-filesystem_id = utils.execute("euca-register %(bucket_name)s/%(image_name)s" % locals())[0].split()[1]
+filesystem_id = utils.execute("euca-register %(bucket_name)s/%(image_name)s" % locals())[0].split()[1] 
 
 if private:
-	utils.execute("euca-modify-image-attribute -l -r all %(filesystem_id)s" % locals())
+	make_private(filesystem_id)
