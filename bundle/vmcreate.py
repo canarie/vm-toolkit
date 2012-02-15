@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 """
-A collection of functions to help create Eucalyptus virtual machines 
-	and EBS volumes in the CESWP cloud.
-	
-	These functions will use the Eucalyptus credentials of whoever is 
-	calling this script
+Helper functions for vmbundle
 """
 import os
 import os.path

@@ -15,7 +15,6 @@ import os.path
 import boto
 import utils
 import vmcreate
-import vminit
 import atexit
 import time
 
@@ -23,7 +22,7 @@ GBs = 1024 * 1024 * 1024
 MBs = 1024 * 1024
 MOUNT_POINT_PREFIX = "/mnt/vmbundle"
 DEFAULT_IMAGE_NAME = "filesystem"
-DEFAULT_BUCKET_NAME = "my-bucket"
+DEFAULT_BUCKET_NAME = os.getenv("EC2_ACCESS_KEY").split(":")[1]
 
 mount_point_created = False
 mount_point = None
@@ -68,24 +67,30 @@ def get_volume(size_in_GBs, instance, mount_point):
 	utils.execute("mount %(device)s %(mount_point)s" % locals())
 	volume_mounted = True
 
-def make_private(image_id):
+def wait_for_available(image_id):
 	sleep_time = 10
 	total_time = 0
 	image = vmcreate.conn.get_image(image_id)
-	print("\n***** Waiting for image to become available to make private *****")
+	print("\n***** Waiting for image to become available *****")
 
 	while image.state != 'available':
 		time.sleep(sleep_time)
 		total_time += sleep_time
 		image = vmcreate.conn.get_image(image_id)
-		if total_time > 900:
-			print("Timed out while waiting for image to become available, use 'euca-modify-image-attributes -l -r all %(image_id)s' to make the image private manually" % locals())
-			return
+		if total_time > 1800:
+			print("\nTimed out waiting for image to become available")
+			return False
 
+	return True
+
+def make_private(image_id):
+	if not wait_for_available(image_id):
+		print("\nUse 'euca-modify-image-attributes -l -r all %(image_id)s' to make the image private manually" % locals())
+		return
 
 	utils.execute("euca-modify-image-attribute -l -r all %(image_id)s" % locals())
 
-if not vminit.isRoot():
+if os.getuid() != 0:
 	print("You need to run this script as root to bundle a VM.")
 	exit(1)
 
@@ -207,7 +212,7 @@ try:
 except:
 	pass
 
-dirs_to_exclude = "/mnt,/tmp,/root/.ssh,/home/ubuntu/.ssh,/etc/udev/rules.d,/var/lib/dhclient,/var/lib/dhcp3" % locals()
+dirs_to_exclude = "/mnt,/tmp,/root/.ssh,/home/ubuntu/.ssh,/etc/udev/rules.d,/var/lib/dhclient,/var/lib/dhcp3"
 print("\n***** Excluding directories %(dirs_to_exclude)s *****" % locals())
 
 utils.execute("sed -i 's/\S\+\s\+\/\s\+/\/dev\/vda \/ /' /etc/fstab")
@@ -227,3 +232,5 @@ filesystem_id = utils.execute("euca-register %(bucket_name)s/%(image_name)s" % l
 
 if private:
 	make_private(filesystem_id)
+else:
+	wait_for_available(filesystem_id)
