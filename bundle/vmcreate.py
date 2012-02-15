@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Helper functions for vmbundle
 """

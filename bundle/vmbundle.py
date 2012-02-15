@@ -73,13 +73,14 @@ def wait_for_available(image_id):
 	image = vmcreate.conn.get_image(image_id)
 	print("\n***** Waiting for image to become available *****")
 
-	while image.state != 'available':
-		time.sleep(sleep_time)
-		total_time += sleep_time
-		image = vmcreate.conn.get_image(image_id)
-		if total_time > 1800:
-			print("\nTimed out waiting for image to become available")
-			return False
+	with utils.spinner():
+		while image.state != 'available':
+			time.sleep(sleep_time)
+			total_time += sleep_time
+			image = vmcreate.conn.get_image(image_id)
+			if total_time > 1800:
+				print("\nTimed out waiting for image to become available")
+				return False
 
 	return True
 
@@ -177,12 +178,14 @@ if fs.f_bfree <= fs.f_blocks * 2 / 3:
 
 if custom_kernel_path:
 	print("\n***** Bundling kernel *****")
-	utils.execute("euca-bundle-image -i %(custom_kernel_path)s -d %(mount_point)s --kernel true -p %(kernel_name)s" % locals())
+	with utils.spinner():
+		utils.execute("euca-bundle-image -i %(custom_kernel_path)s -d %(mount_point)s --kernel true -p %(kernel_name)s" % locals())
 
 	kernel_name += '.manifest.xml'
 
 	print("\n***** Uploading kernel *****")
-	utils.execute("euca-upload-bundle -b %(bucket_name)s -m %(mount_point)s/%(kernel_name)s" % locals())
+	with utils.spinner():
+		utils.execute("euca-upload-bundle -b %(bucket_name)s -m %(mount_point)s/%(kernel_name)s" % locals())
 
 	print("\n***** Registering kernel *****")
 	kernel_id = utils.execute("euca-register %(bucket_name)s/%(kernel_name)s" % locals())[0].split()[1]
@@ -192,12 +195,14 @@ if custom_kernel_path:
 
 if custom_ramdisk_path:
 	print("\n***** Bundling ramdisk *****")
-	utils.execute("euca-bundle-image -i %(custom_ramdisk_path)s -d %(mount_point)s --ramdisk true -p %(ramdisk_name)s" % locals())
+	with utils.spinner():
+		utils.execute("euca-bundle-image -i %(custom_ramdisk_path)s -d %(mount_point)s --ramdisk true -p %(ramdisk_name)s" % locals())
 
 	ramdisk_name += '.manifest.xml'
 
 	print("\n***** Uploading ramdisk *****")
-	utils.execute("euca-upload-bundle -b %(bucket_name)s -m %(mount_point)s/%(ramdisk_name)s" % locals())
+	with utils.spinner():
+		utils.execute("euca-upload-bundle -b %(bucket_name)s -m %(mount_point)s/%(ramdisk_name)s" % locals())
 
 	print("\n***** Registering ramdisk *****")
 	ramdisk_id = utils.execute("euca-register %(bucket_name)s/%(ramdisk_name)s" % locals())[0].split()[1]
@@ -220,12 +225,14 @@ utils.execute("sed -i 's/\S\+\s\+\/\s\+/\/dev\/vda \/ /' /etc/fstab")
 print("\n***** Bundling filesystem *****")
 kernel_opt = '' if kernel_id == '' else '--kernel ' + kernel_id
 ramdisk_opt = '' if ramdisk_id == '' else '--ramdisk ' + ramdisk_id
-utils.execute("euca-bundle-vol --no-inherit %(kernel_opt)s %(ramdisk_opt)s -d %(mount_point)s -r x86_64 -p %(image_name)s -s %(disk_size_in_MBs)s -e %(dirs_to_exclude)s" % locals())
+with utils.spinner():
+	utils.execute("euca-bundle-vol --no-inherit %(kernel_opt)s %(ramdisk_opt)s -d %(mount_point)s -r x86_64 -p %(image_name)s -s %(disk_size_in_MBs)s -e %(dirs_to_exclude)s" % locals())
 
 image_name += '.manifest.xml'
 
 print("\n***** Uploading filesystem *****")
-utils.execute("euca-upload-bundle -b %(bucket_name)s -m %(mount_point)s/%(image_name)s" % locals())
+with utils.spinner():
+	utils.execute("euca-upload-bundle -b %(bucket_name)s -m %(mount_point)s/%(image_name)s" % locals())
 
 print("\n***** Registering filesystem *****")
 filesystem_id = utils.execute("euca-register %(bucket_name)s/%(image_name)s" % locals())[0].split()[1] 
