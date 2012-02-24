@@ -5,7 +5,7 @@ import contextlib
 
 @contextlib.contextmanager
 def spinner():
-	p = subprocess.Popen(['python', 'spinner.py'])
+	p = subprocess.Popen(['python', os.path.dirname(__file__)+'/spinner.py'])
 	yield
 	p.terminate()
 
