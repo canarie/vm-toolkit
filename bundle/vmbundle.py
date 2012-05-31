@@ -86,7 +86,7 @@ def wait_for_available(image_id):
 
 def make_private(image_id):
 	if not wait_for_available(image_id):
-		print("\nUse 'euca-modify-image-attributes -l -r all %(image_id)s' to make the image private manually" % locals())
+		print("\nUse 'euca-modify-image-attribute -l -r all %(image_id)s' to make the image private manually" % locals())
 		return
 
 	utils.execute("euca-modify-image-attribute -l -r all %(image_id)s" % locals())
